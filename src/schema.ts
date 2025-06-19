@@ -42,11 +42,20 @@ export const typeDefs = gql `
         category: String
     }
 
+    type AuthPayload {
+        token: String!
+        user: User!
+    }
+
     type Mutation {
         createUser(input: CreateUserInput!): User!
+
         createTask(input: CreateTaskInput!): Task!
         updateTask(id: ID!, input: UpdateTaskInput!): Task
         deleteTask(id: ID!): Task
+        
+        login(userName: String!): AuthPayload!
+        # logout: String!
     }
 `;
 

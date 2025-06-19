@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import * as jwt from "jsonwebtoken"
 
 // PrismaClient instance
 export interface ApolloContext {
@@ -22,33 +23,33 @@ export interface ApolloContext {
 export const resolvers = {
     // Query resolvers
     Query: {
-        users: (parent: any, args: any, context: ApolloContext) => {
-            return context.prisma.user.findMany({
+        users: async (parent: any, args: any, context: ApolloContext) => {
+            return await context.prisma.user.findMany({
                 include: { tasks: true }
             });
         }, 
 
-        user: (parent: any, args: { id: string }, context: ApolloContext) => {
-            return context.prisma.user.findUnique({
+        user: async (parent: any, args: { id: string }, context: ApolloContext) => {
+            return await context.prisma.user.findUnique({
                 where: { id: parseInt(args.id) },
                 include: { tasks: true }
             });
         },
 
-        tasks: (parent: any, args: any, context: ApolloContext) => {
-            return context.prisma.task.findMany({
+        tasks: async (parent: any, args: any, context: ApolloContext) => {
+            return await context.prisma.task.findMany({
                 include: { user: true }
             });
         },
 
-        task: (parent: any, args: { id: string }, context: ApolloContext) => {
-            return context.prisma.task.findUnique({
+        task: async (parent: any, args: { id: string }, context: ApolloContext) => {
+            return await context.prisma.task.findUnique({
                 where: { id: parseInt(args.id) }
             });
         },
 
-        userTasks: (parent: any, args: { userId: string }, context: ApolloContext) => {
-            return context.prisma.task.findMany({
+        userTasks: async (parent: any, args: { userId: string }, context: ApolloContext) => {
+            return await context.prisma.task.findMany({
                 where: { userId: parseInt(args.userId) }
             });
         }
@@ -56,18 +57,18 @@ export const resolvers = {
 
     // Mutation resolvers
     Mutation: {
-        createUser: (parent: any, args: { input: { userName: string } }, context: ApolloContext ) => {
-            return context.prisma.user.create({
+        createUser: async (parent: any, args: { input: { userName: string } }, context: ApolloContext ) => {
+            return await context.prisma.user.create({
                 data: args.input
             });
         },
 
-        createTask: (parent: any, args: { input: { title: string, description?: string, category?: string, userId: string } }, context: ApolloContext ) => {
-            return context.prisma.task.create({
+        createTask: async (parent: any, args: { input: { title: string, description?: string, category?: string, userId: string } }, context: ApolloContext ) => {
+            return await context.prisma.task.create({
                 data: {
                     title: args.input.title,
                     description: args.input.description,
-                    category: args.input.category || "ToDo",
+                    category: args.input.category || "To-do",
                     user: {
                         connect: { id: parseInt(args.input.userId )}, // Connect the task to the user
                     }
@@ -75,21 +76,43 @@ export const resolvers = {
             });
         },
 
-        updateTask: (parent: any, args: any, context: ApolloContext) => {
-
+        updateTask: async (parent: any, args: { id: string, input: { title?: string, description?: string, category?: string} }, context: ApolloContext) => {
+            return await context.prisma.task.update({
+                where: { id: parseInt(args.id) },
+                data: args.input
+            })
         }, 
 
-        deleteTask: (parent: any, args: any, context: ApolloContext) => {
-
+        deleteTask: async (parent: any, args: { id: string }, context: ApolloContext) => {
+            return await context.prisma.task.delete({
+                where: { id: parseInt(args.id) }
+            });
         }, 
 
+        login: async (parent: any, args: { userName: string }, context: ApolloContext) => {
+            const user = await context.prisma.user.findUnique({
+                where: { userName: args.userName },
+            });
+
+            
+            if(!user) {
+                throw new Error("Invalid user")
+            }
+            
+            const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '3h'});
+            
+            return {
+                user,
+                token
+            }
+        },
     },
 
     Task: { 
-        user: (parent: any, args: any, context: ApolloContext) => {
-            return context.prisma.user.findUnique({
+        user: async (parent: any, args: any, context: ApolloContext) => {
+            return await context.prisma.user.findUnique({
                 where: { id: parent.userId }
             });
         }
-    }
+    },
 }
