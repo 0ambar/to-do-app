@@ -35,15 +35,21 @@ export const resolvers = {
             });
         },
 
-        tasks: (parent: any, args: { userId: string }, context: ApolloContext) => {
+        tasks: (parent: any, args: any, context: ApolloContext) => {
             return context.prisma.task.findMany({
-                where: { userId: parseInt(args.userId) }
+                include: { user: true }
             });
         },
 
         task: (parent: any, args: { id: string }, context: ApolloContext) => {
             return context.prisma.task.findUnique({
                 where: { id: parseInt(args.id) }
+            });
+        },
+
+        userTasks: (parent: any, args: { userId: string }, context: ApolloContext) => {
+            return context.prisma.task.findMany({
+                where: { userId: parseInt(args.userId) }
             });
         }
     },
