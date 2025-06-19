@@ -11,9 +11,20 @@ export const typeDefs = gql `
     type User {
         id: ID!
         userName: String!
-        tasks: [Tasks!]!
+        tasks: [Task!]!
     }
 
+    
+    type Query {
+        users: [User!]!
+        user(id: ID!): User
+        
+        tasks: [Task!]!
+        task(id: ID!): Task
+        
+        userTasks(userId: ID!): [Task!]!
+    }
+        
     input CreateUserInput {
         userName: String!
     }
@@ -21,23 +32,21 @@ export const typeDefs = gql `
     input CreateTaskInput {
         title: String!
         description: String
-        category: String = "To do"
-        userId = ID!
+        category: String
+        userId: ID!
     }
-
-    type Query {
-        users: [User!]!
-        user(id: ID!): User
-
-        tasks: [Task!]!
-        task(id: ID!): Task
-
-        userTasks(userId: ID!): [Task!]!
+        
+    input UpdateTaskInput {
+        title: String
+        description: String
+        category: String
     }
 
     type Mutation {
         createUser(input: CreateUserInput!): User!
         createTask(input: CreateTaskInput!): Task!
+        updateTask(id: ID!, input: UpdateTaskInput!): Task
+        deleteTask(id: ID!): Task
     }
 `;
 
