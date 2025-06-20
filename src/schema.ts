@@ -47,6 +47,10 @@ export const typeDefs = gql `
         user: User!
     }
 
+    type LogoutResponse {
+        message: String!
+    }
+
     type Mutation {
         createUser(input: CreateUserInput!): User!
 
@@ -55,7 +59,7 @@ export const typeDefs = gql `
         deleteTask(id: ID!): Task
         
         login(userName: String!): AuthPayload!
-        # logout: String!
+        logout: LogoutResponse
     }
 `;
 

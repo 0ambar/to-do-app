@@ -6,19 +6,6 @@ export interface ApolloContext {
     prisma: PrismaClient;
 }
 
-// interface User {
-//     id: number;
-//     userName: string;
-// }
-
-// interface Taks {
-//     id: number;
-//     title: string;
-//     description: string;
-//     category: string;
-//     userId: number;
-// }
-
 // Resolvers
 export const resolvers = {
     // Query resolvers
@@ -106,6 +93,10 @@ export const resolvers = {
                 token
             }
         },
+
+        logout: (parent: any, args: any, context: ApolloContext) => {
+            return { message: "Logout exitoso" }
+        }
     },
 
     Task: { 
