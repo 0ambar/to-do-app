@@ -1,10 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import * as jwt from "jsonwebtoken"
-
-// PrismaClient instance
-export interface ApolloContext {
-    prisma: PrismaClient;
-}
+import * as jwt from "jsonwebtoken";
+import { ApolloContext } from "./context/apolloContext";
 
 // Resolvers
 export const resolvers = {
@@ -35,9 +30,12 @@ export const resolvers = {
             });
         },
 
-        userTasks: async (parent: any, args: { userId: string }, context: ApolloContext) => {
+        userTasks: async (parent: any, args: any, context: ApolloContext) => {
+            if(!context.user?.id)
+                throw new Error("You don't have access to tasks")
+            
             return await context.prisma.task.findMany({
-                where: { userId: parseInt(args.userId) }
+                where: { userId: context.user?.id }
             });
         }
     },
@@ -49,21 +47,27 @@ export const resolvers = {
                 data: args.input
             });
         },
+        
+        createTask: async (parent: any, args: { input: { title: string, description?: string, category?: string} }, context: ApolloContext ) => {
+            if(!context.user?.id)
+                throw new Error("You can not create a task")
 
-        createTask: async (parent: any, args: { input: { title: string, description?: string, category?: string, userId: string } }, context: ApolloContext ) => {
             return await context.prisma.task.create({
                 data: {
                     title: args.input.title,
                     description: args.input.description,
-                    category: args.input.category || "To-do",
+                    category: args.input.category || "to-do",
                     user: {
-                        connect: { id: parseInt(args.input.userId )}, // Connect the task to the user
+                        connect: { id: context.user.id }, // Connect the task to the user
                     }
                 }
             });
         },
 
         updateTask: async (parent: any, args: { id: string, input: { title?: string, description?: string, category?: string} }, context: ApolloContext) => {
+            if(!context.user?.id)
+                throw new Error("You can not update a task")
+
             return await context.prisma.task.update({
                 where: { id: parseInt(args.id) },
                 data: args.input
@@ -71,6 +75,9 @@ export const resolvers = {
         }, 
 
         deleteTask: async (parent: any, args: { id: string }, context: ApolloContext) => {
+            if(!context.user?.id)
+                throw new Error("You can not delete a task")
+
             return await context.prisma.task.delete({
                 where: { id: parseInt(args.id) }
             });
@@ -101,6 +108,9 @@ export const resolvers = {
 
     Task: { 
         user: async (parent: any, args: any, context: ApolloContext) => {
+            if(!context.user?.id)
+                throw new Error("You can not access to a task")
+
             return await context.prisma.user.findUnique({
                 where: { id: parent.userId }
             });

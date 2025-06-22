@@ -9,6 +9,8 @@ export interface ApolloContext {
 export const createContext = async (prisma: PrismaClient, req: any): Promise<ApolloContext> => {
     const user = await getUserFromToken(req.headers.authorization || '', prisma)
 
+    console.log("user: ", user)
+
     return {
         prisma: prisma,
         user: user
